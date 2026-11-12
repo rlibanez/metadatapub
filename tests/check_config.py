@@ -38,9 +38,9 @@ with tempfile.TemporaryDirectory() as path:
     gui.current_db = SimpleNamespace(new_api=api)
     gui.library_view = SimpleNamespace(model=lambda: SimpleNamespace(refresh_ids=lambda ids: None))
     editor = Editor(gui, [book_id])
-    assert editor.table.columnCount() == 5
-    assert editor.table.horizontalHeaderItem(1).text() == 'custom_id'
-    assert editor.table.item(0, 2).text() == '9080'
+    assert editor.table.columnCount() == 6
+    assert editor.table.horizontalHeaderItem(2).text() == 'custom_id'
+    assert editor.table.item(0, 3).text() == '9080'
     # Existing dialogs keep their field snapshot even if preferences change.
     prefs['identifiers'] = ['catalog_id']
     assert editor.fields == ('custom_id', 'catalog_id')
@@ -48,7 +48,7 @@ with tempfile.TemporaryDirectory() as path:
     QMessageBox.exec = lambda self: QMessageBox.StandardButton.Save
     QMessageBox.information = lambda *args: None
     try:
-        editor.table.item(0, 1).setText('12345')
+        editor.table.item(0, 2).setText('12345')
         editor.save()
         assert editor.table.item(0, editor.status_col).text() == 'Guardado y verificado'
         data = api.format(book_id, 'EPUB')

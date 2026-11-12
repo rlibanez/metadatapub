@@ -3,7 +3,7 @@ import os
 import runpy
 import tempfile
 from types import SimpleNamespace
-from qt.core import QApplication, QWidget
+from qt.core import QApplication, Qt, QWidget
 from calibre.library import db
 from calibre.ebooks.metadata.book.base import Metadata
 from calibre.customize.ui import interface_actions
@@ -25,6 +25,7 @@ with tempfile.TemporaryDirectory() as path:
     for title, data in [
         ('Completo', fixture()),
         ('Ausente', fixture(opf.replace(b'<dc:identifier>catalog_id:9080</dc:identifier>', b''))),
+        ('Otro ausente', fixture(opf.replace(b'<dc:identifier>test_id:2.0</dc:identifier>', b''))),
         ('Vacio', fixture(opf.replace(b'catalog_id:9080', b'catalog_id:'))),
         ('Error', b'not a zip'),
     ]:
@@ -43,6 +44,15 @@ with tempfile.TemporaryDirectory() as path:
     editor = Editor(gui, ids)
     assert [row[0] for row in editor.rows] == ids
     assert editor.table.item(0, editor.status_col).text() == 'Diferencias con Calibre'
+    for order, expected in (
+        (Qt.SortOrder.AscendingOrder, ['catalog_id', 'catalog_id', 'test_id']),
+        (Qt.SortOrder.DescendingOrder, ['test_id', 'catalog_id', 'catalog_id']),
+    ):
+        editor.table.sortItems(editor.status_col, order)
+        statuses = [editor.table.item(row, editor.status_col).text()
+                    for row in range(editor.table.rowCount())]
+        assert [status.removeprefix('Faltan en el archivo: ') for status in statuses
+                if status.startswith('Faltan en el archivo: ')] == expected
     editor.close()
     library.close()
 print('PASS: filtro de ausentes/vacíos, todos, diferencias de biblioteca y errores')

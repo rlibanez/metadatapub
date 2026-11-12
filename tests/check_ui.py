@@ -1,5 +1,6 @@
 """Run after installing the ZIP in a temporary Calibre configuration."""
 import csv
+import json
 import os
 import runpy
 import tempfile
@@ -25,21 +26,26 @@ with tempfile.TemporaryDirectory() as path:
     gui = QWidget()
     gui.current_db = SimpleNamespace(new_api=api)
     editor = Editor(gui, list(added))
+    assert editor.windowTitle() == 'MetadataPUB — editar identificadores'
+    assert 'Ver lectura del archivo' in {b.text() for b in editor.findChildren(QPushButton)}
     assert editor.table.rowCount() == 1
-    assert editor.table.item(0, 4).text() == '9080'
-    assert editor.table.item(0, 5).text() == '2.0'
-    assert editor.table.item(0, 1).text() == ''
+    assert [editor.table.horizontalHeaderItem(col).text() for col in (0, 1)] == ['ID', 'Título']
+    assert editor.table.item(0, 0).text() == str(next(iter(added)))
+    assert editor.table.item(0, 1).text() == 'Prueba'
+    assert editor.table.item(0, 5).text() == '9080'
+    assert editor.table.item(0, 6).text() == '2.0'
+    assert editor.table.item(0, 2).text() == ''
     gui.library_view = SimpleNamespace(model=lambda: SimpleNamespace(refresh_ids=lambda ids: None))
     original_exec = QMessageBox.exec
     original_information = QMessageBox.information
     QMessageBox.exec = lambda self: QMessageBox.StandardButton.Save
     QMessageBox.information = lambda *args: None
     try:
-        editor.table.item(0, 1).setText('the-rose-of-fire')
-        editor.table.item(0, 2).setText('461194')
-        editor.table.item(0, 3).setText('30413356')
+        editor.table.item(0, 2).setText('the-rose-of-fire')
+        editor.table.item(0, 3).setText('461194')
+        editor.table.item(0, 4).setText('30413356')
         editor.save()
-        assert editor.table.item(0, 7).text() == 'Guardado y verificado'
+        assert editor.table.item(0, 8).text() == 'Guardado y verificado'
         assert api.field_for('identifiers', next(iter(added)))['hardcover_book'] == '461194'
         backups = list(__import__('pathlib').Path(path).glob('metadatapub-backups/*/*.epub'))
         assert len(backups) == 1 and backups[0].read_bytes() == fixture()
@@ -65,6 +71,49 @@ with tempfile.TemporaryDirectory() as path:
         QDialog.exec = old_dialog_exec
     editor.close()
 
+    # Sorted and filtered rows must still diagnose and save the correct book.
+    books = {}
+    for title in ('Zeta', 'Alfa'):
+        data = fixture(fixture_data['opf'].replace(b'<dc:title>Prueba</dc:title>',
+                                                    f'<dc:title>{title}</dc:title>'.encode()))
+        ids, _ = api.add_books([(Metadata(title, ['Autor']), {'EPUB': io.BytesIO(data)})])
+        books[title] = next(iter(ids))
+    editor = Editor(gui, list(books.values()))
+    editor.table.sortItems(0, Qt.SortOrder.AscendingOrder)
+    assert editor.table.item(0, 0).text() == str(books['Zeta'])
+    editor.table.sortItems(1, Qt.SortOrder.AscendingOrder)
+    assert editor.table.item(0, 1).text() == 'Alfa'
+    editor.table.item(0, 2).setText('alfa-id')
+    editor.table.item(1, 2).setText('zeta-id')
+    editor.search.setText('9080')
+    editor.column_filters[1].setText('ALFA')
+    assert editor.visible_count.text() == '1 de 2 filas visibles'
+    editor.table.sortItems(1, Qt.SortOrder.DescendingOrder)
+    assert editor.table.isRowHidden(0) and not editor.table.isRowHidden(1)
+    editor.table.setCurrentCell(1, 0)
+    seen_ids = []
+    old_dialog_exec = QDialog.exec
+    QDialog.exec = lambda dialog: seen_ids.append(json.loads(
+        dialog.findChild(QPlainTextEdit).toPlainText())['book_id'])
+    try:
+        editor.show_diagnostics()
+        assert seen_ids == [books['Alfa']]
+    finally:
+        QDialog.exec = old_dialog_exec
+    editor.table.sortItems(editor.status_col, Qt.SortOrder.AscendingOrder)
+    QMessageBox.exec = lambda self: QMessageBox.StandardButton.Save
+    QMessageBox.information = lambda *args: None
+    try:
+        editor.save()
+        for title, expected in (('Alfa', 'alfa-id'), ('Zeta', 'zeta-id')):
+            assert api.field_for('identifiers', books[title])['hardcover'] == expected
+        for row in range(editor.table.rowCount()):
+            assert editor.table.item(row, editor.status_col).text() == 'Guardado y verificado'
+    finally:
+        QMessageBox.exec = original_exec
+        QMessageBox.information = original_information
+    editor.close()
+
     book_id = next(iter(added))
     original = api.format(book_id, 'EPUB')
     api.add_format(book_id, 'KEPUB', io.BytesIO(original), run_hooks=False)
@@ -82,7 +131,7 @@ with tempfile.TemporaryDirectory() as path:
     action.genesis()
     menu_actions = [item for item in action.qaction.menu().actions() if not item.isSeparator()]
     assert [item.text() for item in menu_actions] == [
-        'Editar identificadores EPUB', 'Comparar metadatos con los archivos', 'Personalizar complemento', 'Ayuda']
+        'Editar identificadores', 'Comparar metadatos con los archivos', 'Personalizar complemento', 'Ayuda']
     _, audit_action, customize_action, help_action = menu_actions
     customize_action.trigger()
     assert settings_parents == [gui]

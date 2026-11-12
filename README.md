@@ -113,14 +113,31 @@ sobrescribe esa configuración: utiliza el botón de restablecer para adoptarla.
    comprobar los valores propuestos y confirma el guardado.
 4. Revisa la columna **Estado** para conocer el resultado de cada libro.
 
-El plugin trabaja sobre los EPUB de los libros seleccionados. No descarga
+La opción **Editar identificadores** admite actualmente EPUB. No descarga
 metadatos ni consulta servicios externos.
+
+### Ordenar y filtrar
+
+Pulsa una cabecera para ordenar por esa columna y vuelve a pulsarla para invertir
+el orden. **ID** ordena numéricamente y **Título** alfabéticamente. En orden ascendente, **Estado**
+agrupa primero errores, luego campos ausentes, diferencias con Calibre, libros
+completos y, al final, libros guardados en la sesión.
+
+Usa el buscador general para encontrar texto en cualquier columna. Debajo hay
+un filtro rápido por columna; puedes combinar varios con la búsqueda general.
+Las búsquedas no distinguen mayúsculas y minúsculas. Cada botón **Limpiar**
+restablece su fila de filtros y el contador indica cuántas filas quedan visibles.
+
+Ordenar y filtrar no vuelve a leer los EPUB ni descarta las ediciones. Al pulsar
+**Revisar y guardar cambios**, la revisión incluye también los cambios de filas
+ocultas por los filtros.
 
 ### Cómo interpretar la tabla
 
 | Columna | Contenido |
 | --- | --- |
-| ID / título | Identificador del registro en Calibre y título leído del EPUB. |
+| ID | Identificador del registro en Calibre. |
+| Título | Título leído del EPUB. |
 | Columnas de identificadores | Valores encontrados dentro del EPUB; son editables. |
 | Valores en Calibre | Valores de la ficha de Calibre que difieren de los encontrados en el EPUB. |
 | Estado | Campos ausentes en el EPUB, diferencias con Calibre, errores o resultado del guardado. |
@@ -164,9 +181,9 @@ Calibre. Excluye la portada y las columnas personalizadas. Las diferencias
 de HTML pueden aparecer aunque la descripción se vea igual. La auditoría
 funciona con cualquier configuración del editor y no modifica los libros.
 
-## Ver lectura EPUB
+## Ver lectura del archivo
 
-Selecciona una fila y pulsa **Ver lectura EPUB** para abrir un informe visible
+Selecciona una fila y pulsa **Ver lectura del archivo** para abrir un informe visible
 con texto seleccionable y los botones **Copiar informe** y **Cerrar**.
 
 El informe incluye la versión del plugin, biblioteca, ID del libro, información

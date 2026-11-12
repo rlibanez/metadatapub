@@ -1,4 +1,4 @@
-from qt.core import QWidget, QVBoxLayout, QLabel, QPlainTextEdit, QPushButton, QMessageBox, QCheckBox
+from qt.core import QWidget, QVBoxLayout, QLabel, QPlainTextEdit, QPushButton, QMessageBox, QCheckBox, QDialogButtonBox, Qt
 from calibre_plugins.metadatapub.settings import DEFAULT_FIELDS, configured_fields, parse_fields, prefs
 
 
@@ -6,12 +6,8 @@ class ConfigWidget(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
-        label = QLabel('Identificadores que quieres comprobar y editar, uno por línea.\n'
-                       'Escribe únicamente el tipo (por ejemplo: isbn), sin dos puntos ni valor.\n'
-                       'El orden de las líneas será el de las columnas. Se guardan en minúsculas.\n'
-                       'La configuración se aplica a todas las bibliotecas de este perfil de Calibre.\n'
-                       'Quitar un tipo de esta lista no lo elimina de tus libros.\n'
-                       'Puedes dejar la lista vacía para no comprobar ningún identificador.')
+        label = QLabel('Escribe un tipo de identificador por línea (p. ej., isbn), sin valor.\n'
+                       'El orden de la lista determina el de las columnas.')
         label.setWordWrap(True)
         layout.addWidget(label)
         self.editor = QPlainTextEdit()
@@ -23,9 +19,27 @@ class ConfigWidget(QWidget):
         self.show_all.setToolTip('Desmarcada: solo se muestran los EPUB con algún identificador configurado vacío o ausente. Los errores de lectura siempre se muestran.')
         layout.addWidget(self.show_all)
         count = len(DEFAULT_FIELDS)
-        reset = QPushButton(f'Restablecer valores de defaults.txt ({count} identificadores)')
-        reset.clicked.connect(lambda: self.editor.setPlainText('\n'.join(DEFAULT_FIELDS)))
-        layout.addWidget(reset)
+        self.reset_button = QPushButton(f'Restablecer valores de defaults.txt ({count} identificadores)')
+        self.reset_button.clicked.connect(lambda: self.editor.setPlainText('\n'.join(DEFAULT_FIELDS)))
+        layout.addWidget(self.reset_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        # Calibre creates the standard footer after asking for our widget.
+        footer = self.window().findChild(QDialogButtonBox)
+        if footer is None:
+            return
+        save = footer.button(QDialogButtonBox.StandardButton.Ok)
+        cancel = footer.button(QDialogButtonBox.StandardButton.Cancel)
+        if save is None or cancel is None:
+            return
+        self.window().setWindowTitle('Configurar MetadataPUB')
+        save.setText('Guardar')
+        cancel.setText('Cancelar')
+        if footer.buttonRole(self.reset_button) == QDialogButtonBox.ButtonRole.InvalidRole:
+            self.layout().removeWidget(self.reset_button)
+            footer.addButton(self.reset_button, QDialogButtonBox.ButtonRole.ResetRole)
+            self.reset_button.show()
 
     def validate(self):
         try:

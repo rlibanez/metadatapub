@@ -2,6 +2,9 @@
 
 ## 1.1.0
 
+- Ordenación por cabeceras, búsqueda general y filtros rápidos por columna en el editor de identificadores EPUB.
+- Botones del editor con ancho natural y Cerrar a la derecha.
+
 - Comparación por lotes de los metadatos de Calibre y de los archivos seleccionados (EPUB, KEPUB, MOBI, AZW y AZW3), con exportación CSV.
 - Apertura de Pulir libros de Calibre desde las filas seleccionadas en la auditoría.
 - Accesos a la configuración del plugin y al repositorio de GitHub desde el desplegable.
