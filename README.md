@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>1.0.0</strong> · <strong>rlibanez</strong> · Calibre <strong>9.14.0+</strong>
+  <strong>1.1.0</strong> · <strong>rlibanez</strong> · Calibre <strong>9.14.0+</strong>
 </p>
 
 Comprueba, añade y edita los identificadores de tus libros desde Calibre.
@@ -33,19 +33,19 @@ en el EPUB como en su ficha de biblioteca.
 2. Opcionalmente, preconfigura los identificadores editando `defaults.txt` dentro
    del ZIP antes de importarlo. Consulta [Configuración → Valores iniciales:
    defaults.txt](#valores-iniciales-defaultstxt).
-3. En Calibre, abre **Preferences → Plugins → Load plugin from file**
-   (Preferencias → Complementos → Cargar complemento desde un archivo).
+3. En Calibre, abre **Preferencias → Complementos → Cargar complemento desde un archivo**.
 4. Selecciona el ZIP y reinicia Calibre cuando lo solicite.
-5. Añade **MetadataPUB** a la barra desde **Preferences → Toolbars & menus →
-   The main toolbar** si el botón no aparece.
+5. Añade **MetadataPUB** a la barra desde **Preferencias → Barras de herramientas y menús →
+   Barra de herramientas principal** si el botón no aparece.
 
 Para actualizar, instala el nuevo ZIP mediante el mismo procedimiento y reinicia
 Calibre. La configuración personalizada se conserva.
 
 ## Configuración
 
-Abre **Preferences → Plugins**, selecciona **MetadataPUB** y pulsa
-**Customize plugin** (Personalizar complemento).
+Abre la flecha de **MetadataPUB** y elige **Personalizar complemento** para abrir la
+configuración. El menú también incluye **Ayuda**, que abre el repositorio de
+MetadataPUB en GitHub.
 
 ### Identificadores
 
@@ -134,6 +134,35 @@ Un campo que dejes vacío significa **no modificar**; no elimina un valor
 existente. Los valores no vacíos que cambien el EPUB o la ficha se guardan en
 ambos lugares. Los identificadores que no hayas cambiado se conservan en cada
 fuente; el plugin no sincroniza automáticamente todos los metadatos del libro.
+
+## Comparar metadatos con los archivos
+
+Selecciona los libros que quieras auditar (Ctrl+A para toda la lista visible)
+y abre **MetadataPUB → Comparar metadatos con los archivos** con la flecha del botón.
+La tabla agrupa los campos que difieren en una fila por archivo, con los valores
+de la ficha y del archivo. Puedes ordenar por cualquier encabezado y exportar
+las diferencias agrupadas a CSV. Los saltos de línea dentro de un valor se
+indican con ⏎ para alinear cada campo con sus dos valores. La auditoría revisa cada
+EPUB, KEPUB, MOBI, AZW y AZW3 de los libros seleccionados. El resumen cuenta los
+archivos comparados, con diferencias y con errores, además de los libros sin
+formato compatible o pendientes si cancelas.
+
+Usa el buscador general para encontrar texto en cualquier columna. Los filtros
+por columna se combinan entre sí y con la búsqueda general. La búsqueda
+coincide con fragmentos de texto sin distinguir mayúsculas y minúsculas.
+
+Marca las casillas de las filas que quieras, o usa **Seleccionar todo** y
+**Deseleccionar todo** para las filas visibles. Las filas ocultas conservan su
+casilla y quedan fuera de la selección que se envía a Pulir libros. Pulsa **Pulir libros seleccionados…** para
+abrir el diálogo nativo de Calibre. Las filas se agrupan por libro y Calibre
+decide qué formatos puede pulir en cada uno. En Calibre 9.18 son EPUB, KEPUB y
+AZW3. El pulido comienza cuando confirmas las opciones en ese diálogo.
+
+La comparación incluye título, autores, editorial, serie y número, etiquetas,
+idiomas, fecha de publicación, descripción HTML y los identificadores que lee
+Calibre. Excluye la portada y las columnas personalizadas. Las diferencias
+de HTML pueden aparecer aunque la descripción se vea igual. La auditoría
+funciona con cualquier configuración del editor y no modifica los libros.
 
 ## Ver lectura EPUB
 

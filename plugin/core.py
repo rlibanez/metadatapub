@@ -31,7 +31,7 @@ def inspect_epub(data, fields):
         root = etree.fromstring(z.read(path), parser)
         metadata = root.find('{%s}metadata' % OPF)
         if metadata is None:
-            raise ValueError('No hay metadata OPF.')
+            raise ValueError('El OPF no contiene metadatos.')
         values, counts = {}, Counter()
         for node in metadata.findall('{%s}identifier' % DC):
             text = (node.text or '').strip()
