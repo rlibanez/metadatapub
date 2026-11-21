@@ -6,7 +6,7 @@ from datetime import datetime
 from html import escape
 from uuid import uuid4
 from qt.core import (QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout,
-                     QTableWidget, QTableWidgetItem, Qt, QMessageBox, QProgressDialog, QPlainTextEdit, QApplication, QFileDialog, QHeaderView, QUrl, QSignalBlocker, QLineEdit)
+                     QTableWidget, QTableWidgetItem, Qt, QMessageBox, QProgressDialog, QPlainTextEdit, QApplication, QFileDialog, QHeaderView, QUrl, QSignalBlocker, QLineEdit, QMenu)
 from calibre.gui2 import open_url
 from calibre.gui2.actions import InterfaceAction
 from calibre_plugins.metadatapub import MetadataPUBPlugin
@@ -17,6 +17,28 @@ from calibre_plugins.metadatapub.settings import configured_fields, prefs
 
 def cell_tooltip(text):
     return '<qt>' + escape(text).replace('\n', '<br>') + '</qt>' if text else ''
+
+
+def enable_header_context_menu(table):
+    header = table.horizontalHeader()
+    header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+
+    def show_menu(position):
+        column = header.logicalIndexAt(position)
+        if column < 0:
+            return
+        menu = QMenu(header)
+        action = menu.addAction('Ajustar ancho al contenido')
+        action.triggered.connect(lambda: table.resizeColumnToContents(column))
+        menu.exec(header.mapToGlobal(position))
+
+    header.customContextMenuRequested.connect(show_menu)
+
+
+def size_initial_columns(table):
+    table.resizeColumnsToContents()
+    for column in range(table.columnCount()):
+        table.setColumnWidth(column, min(table.columnWidth(column), 360))
 
 
 class MetadataPUBAction(InterfaceAction):
@@ -196,7 +218,14 @@ class AuditDialog(QDialog):
                 if isinstance(value, str):
                     item.setToolTip(cell_tooltip(value))
                 self.table.setItem(row, column, item)
-        self.table.resizeColumnsToContents()
+        enable_header_context_menu(self.table)
+        size_initial_columns(self.table)
+        minimum_height = self.table.verticalHeader().defaultSectionSize()
+        line_height = self.table.fontMetrics().lineSpacing()
+        for row in range(self.table.rowCount()):
+            lines = max(self.table.item(row, column).text().count('\n') + 1
+                        for column in range(1, self.table.columnCount()))
+            self.table.setRowHeight(row, max(minimum_height, lines * line_height + 12))
         header.setSortIndicator(1, Qt.SortOrder.AscendingOrder)
         self.table.setSortingEnabled(True)
         export.setEnabled(bool(self.report))
@@ -355,7 +384,8 @@ class Editor(QDialog):
             except Exception as err:
                 self.add_row(book_id, None, None, {}, {}, f'ERROR: {err}', 0)
         progress.setValue(len(ids))
-        self.table.resizeColumnsToContents()
+        enable_header_context_menu(self.table)
+        size_initial_columns(self.table)
         self.table.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
         self.table.setSortingEnabled(True)
         for field in (self.search, *self.column_filters):
