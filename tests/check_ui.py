@@ -129,6 +129,34 @@ with tempfile.TemporaryDirectory() as path:
         name='MetadataPUB', do_user_config=settings_parents.append)
     action.create_action()
     action.genesis()
+    assert action.qaction.toolTip() == 'Editar identificadores'
+    from calibre_plugins.metadatapub import MetadataPUBPlugin
+    base_plugin = MetadataPUBPlugin(None)
+    base_plugin.actual_plugin_ = action
+    config = base_plugin.config_widget()
+    config.default_action.setCurrentIndex(config.default_action.findData('audit'))
+    base_plugin.save_settings(config)
+    assert action.qaction.toolTip() == 'Comparar metadatos con los archivos'
+    assert action.menuless_qaction.toolTip() == action.qaction.toolTip()
+    config.default_action.setCurrentIndex(config.default_action.findData('edit'))
+    base_plugin.save_settings(config)
+
+    calls = []
+    handlers = ('open_dialog', 'open_audit', 'open_settings', 'open_help')
+    originals = {name: getattr(action, name) for name in handlers}
+    for name in handlers:
+        setattr(action, name, lambda name=name: calls.append(name))
+    try:
+        for key, expected in zip(('edit', 'audit', 'settings', 'help', 'invalid'),
+                                 (*handlers, 'open_dialog')):
+            prefs['default_action'] = key
+            action.qaction.trigger()
+            assert calls[-1] == expected
+    finally:
+        prefs['default_action'] = 'edit'
+        for name, handler in originals.items():
+            setattr(action, name, handler)
+
     menu_actions = [item for item in action.qaction.menu().actions() if not item.isSeparator()]
     assert [item.text() for item in menu_actions] == [
         'Editar identificadores', 'Comparar metadatos con los archivos', 'Personalizar complemento', 'Ayuda']

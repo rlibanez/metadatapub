@@ -5,7 +5,7 @@ class MetadataPUBPlugin(InterfaceActionBase):
     name = 'MetadataPUB'
     description = 'Completa identificadores configurables en EPUB y biblioteca con respaldo.'
     author = 'rlibanez'
-    version = (1, 1, 0)
+    version = (1, 1, 1)
     supported_platforms = ['linux', 'windows', 'osx']
     minimum_calibre_version = (9, 14, 0)
     actual_plugin = 'calibre_plugins.metadatapub.ui:MetadataPUBAction'
@@ -19,3 +19,5 @@ class MetadataPUBPlugin(InterfaceActionBase):
 
     def save_settings(self, config_widget):
         config_widget.save_settings()
+        if self.actual_plugin_ is not None:
+            self.actual_plugin_.update_default_tooltip()

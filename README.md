@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong>1.1.0</strong> · <strong>rlibanez</strong> · Calibre <strong>9.14.0+</strong>
+  <strong>1.1.1</strong> · <strong>rlibanez</strong> · Calibre <strong>9.14.0+</strong>
 </p>
 
 Comprueba, añade y edita los identificadores de tus libros desde Calibre.
@@ -46,6 +46,14 @@ Calibre. La configuración personalizada se conserva.
 Abre la flecha de **MetadataPUB** y elige **Personalizar complemento** para abrir la
 configuración. El menú también incluye **Ayuda**, que abre el repositorio de
 MetadataPUB en GitHub.
+
+### Acción del botón principal
+
+En **Personalizar complemento**, elige qué acción abre el botón principal de
+MetadataPUB. Puedes seleccionar **Editar identificadores**, **Comparar metadatos
+con los archivos**, **Personalizar complemento** o **Ayuda**. Guarda para aplicar
+el cambio. La elección se conserva entre sesiones y se comparte entre bibliotecas
+del mismo perfil de Calibre. El valor inicial es **Editar identificadores**.
 
 ### Identificadores
 

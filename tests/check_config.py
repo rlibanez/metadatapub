@@ -16,6 +16,8 @@ fixture = runpy.run_path(os.path.join(os.path.dirname(__file__), 'check_calibre.
 app = QApplication.instance() or QApplication([])
 plugin = next(p for p in interface_actions() if p.name == 'MetadataPUB')
 assert plugin.is_customizable()
+assert prefs['default_action'] == 'edit'
+
 config = plugin.config_widget()
 for invalid in ('catalog_id\nCATALOG_ID', 'catalog_id:123', 'my identifier'):
     try:
@@ -24,10 +26,14 @@ for invalid in ('catalog_id\nCATALOG_ID', 'catalog_id:123', 'my identifier'):
         pass
     else:
         raise AssertionError(invalid)
+config.default_action.setCurrentIndex(config.default_action.findData('audit'))
 config.editor.setPlainText(' custom_id \n CATALOG_ID \n')
 assert config.validate()
 plugin.save_settings(config)
 assert configured_fields() == ('custom_id', 'catalog_id')
+assert prefs['default_action'] == 'audit'
+assert plugin.config_widget().default_action.currentData() == 'audit'
+prefs['default_action'] = 'edit'
 assert plugin.config_widget().editor.toPlainText() == 'custom_id\ncatalog_id'
 with tempfile.TemporaryDirectory() as path:
     library = db(path)

@@ -1,11 +1,17 @@
-from qt.core import QWidget, QVBoxLayout, QLabel, QPlainTextEdit, QPushButton, QMessageBox, QCheckBox, QDialogButtonBox, Qt
-from calibre_plugins.metadatapub.settings import DEFAULT_FIELDS, configured_fields, parse_fields, prefs
+from qt.core import QWidget, QVBoxLayout, QLabel, QPlainTextEdit, QPushButton, QMessageBox, QCheckBox, QDialogButtonBox, Qt, QComboBox
+from calibre_plugins.metadatapub.settings import DEFAULT_ACTIONS, DEFAULT_FIELDS, configured_fields, parse_fields, prefs
 
 
 class ConfigWidget(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
+        layout.addWidget(QLabel('Acción del botón principal'))
+        self.default_action = QComboBox()
+        for key, text in DEFAULT_ACTIONS:
+            self.default_action.addItem(text, key)
+        self.default_action.setCurrentIndex(max(0, self.default_action.findData(prefs['default_action'])))
+        layout.addWidget(self.default_action)
         label = QLabel('Escribe un tipo de identificador por línea (p. ej., isbn), sin valor.\n'
                        'El orden de la lista determina el de las columnas.')
         label.setWordWrap(True)
@@ -52,3 +58,4 @@ class ConfigWidget(QWidget):
     def save_settings(self):
         prefs['identifiers'] = list(parse_fields(self.editor.toPlainText()))
         prefs['show_all'] = self.show_all.isChecked()
+        prefs['default_action'] = self.default_action.currentData()

@@ -1,5 +1,12 @@
 # Historial de cambios
 
+## 1.1.1
+
+- Acción predeterminada del botón principal configurable, con tooltip actualizado al guardar los ajustes.
+- Ancho inicial de las columnas limitado a 360 píxeles y opción «Ajustar ancho al contenido» en el menú contextual de los encabezados.
+- Altura de las filas de la auditoría adaptada a los campos agrupados, con cada campo y sus valores en líneas separadas.
+- Ordenación de Estado por categoría y texto completo para agrupar los mensajes iguales.
+
 ## 1.1.0
 
 - Ordenación por cabeceras, búsqueda general y filtros rápidos por columna en el editor de identificadores EPUB.

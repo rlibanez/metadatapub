@@ -12,7 +12,7 @@ from calibre.gui2.actions import InterfaceAction
 from calibre_plugins.metadatapub import MetadataPUBPlugin
 from calibre_plugins.metadatapub.audit import READERS, compare_book
 from calibre_plugins.metadatapub.core import inspect_epub, prepare, digest
-from calibre_plugins.metadatapub.settings import configured_fields, prefs
+from calibre_plugins.metadatapub.settings import DEFAULT_ACTIONS, configured_fields, prefs
 
 
 def cell_tooltip(text):
@@ -44,13 +44,15 @@ def size_initial_columns(table):
 class MetadataPUBAction(InterfaceAction):
     name = 'MetadataPUB'
     action_add_menu = True
-    action_menu_clone_qaction = 'Editar identificadores'
-    action_spec = ('MetadataPUB', None, 'Completar identificadores de los libros seleccionados', None)
+    action_menu_clone_qaction = False
+    action_spec = ('MetadataPUB', None, 'Abrir la acción predeterminada de MetadataPUB', None)
 
     def genesis(self):
         self.qaction.setIcon(get_icons('images/metadatapub.png', 'MetadataPUB'))
-        self.qaction.triggered.connect(self.open_dialog)
+        self.qaction.triggered.connect(self.open_default)
         menu = self.qaction.menu()
+        self.create_menu_action(menu, 'edit_identifiers', 'Editar identificadores',
+                                shortcut=False, triggered=self.open_dialog)
         self.create_menu_action(menu, 'audit_metadata',
                                 'Comparar metadatos con los archivos',
                                 shortcut=False, triggered=self.open_audit)
@@ -60,6 +62,25 @@ class MetadataPUBAction(InterfaceAction):
                                 shortcut=False, triggered=self.open_settings)
         self.create_menu_action(menu, 'help', 'Ayuda',
                                 shortcut=False, triggered=self.open_help)
+
+        self.update_default_tooltip()
+
+    def update_default_tooltip(self):
+        labels = dict(DEFAULT_ACTIONS)
+        text = labels.get(prefs['default_action'], labels['edit'])
+        for action in (self.qaction, self.menuless_qaction):
+            action.setToolTip(text)
+            action.setStatusTip(text)
+            action.setWhatsThis(text)
+
+    def open_default(self):
+        actions = {
+            'edit': self.open_dialog,
+            'audit': self.open_audit,
+            'settings': self.open_settings,
+            'help': self.open_help,
+        }
+        actions.get(prefs['default_action'], self.open_dialog)()
 
     def open_settings(self):
         self.interface_action_base_plugin.do_user_config(self.gui)
