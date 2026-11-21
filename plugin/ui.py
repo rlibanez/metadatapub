@@ -6,7 +6,7 @@ from datetime import datetime
 from html import escape
 from uuid import uuid4
 from qt.core import (QDialog, QVBoxLayout, QLabel, QPushButton, QHBoxLayout,
-                     QTableWidget, QTableWidgetItem, Qt, QMessageBox, QProgressDialog, QPlainTextEdit, QApplication, QFileDialog, QHeaderView, QUrl, QSignalBlocker, QLineEdit, QMenu)
+                     QTableWidget, QTableWidgetItem, Qt, QMessageBox, QProgressDialog, QPlainTextEdit, QApplication, QFileDialog, QHeaderView, QUrl, QSignalBlocker, QLineEdit, QMenu, QAction)
 from calibre.gui2 import open_url
 from calibre.gui2.actions import InterfaceAction
 from calibre_plugins.metadatapub import MetadataPUBPlugin
@@ -33,6 +33,51 @@ def enable_header_context_menu(table):
         menu.exec(header.mapToGlobal(position))
 
     header.customContextMenuRequested.connect(show_menu)
+
+
+def enable_edit_book_menu(table, gui, db, book_at_row):
+    from calibre.ebooks.oeb.polish.main import SUPPORTED
+
+    table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    edit = QAction('Editar libro', table)
+    edit.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+    table.addAction(edit)
+    native = getattr(gui, 'iactions', {}).get('Tweak ePub')
+    if native is not None:
+        source = native.shortcut_action_for_context_menu
+        edit.setShortcuts(source.shortcuts())
+        source.changed.connect(lambda: edit.setShortcuts(source.shortcuts()))
+
+    def update_enabled():
+        row = table.currentRow()
+        edit.setEnabled(row >= 0 and book_at_row(row)[1] in SUPPORTED)
+
+    def open_editor():
+        row = table.currentRow()
+        if row < 0:
+            return
+        book_id, fmt = book_at_row(row)
+        if fmt not in SUPPORTED:
+            return
+        if gui.current_db.new_api is not db:
+            QMessageBox.warning(table, 'MetadataPUB', 'La biblioteca ha cambiado. Vuelve a analizar.')
+            return
+        gui.iactions['Tweak ePub'].ebook_edit_format(book_id, fmt)
+
+    def show_menu(position):
+        row = table.rowAt(position.y())
+        if row < 0:
+            return
+        table.setCurrentCell(row, max(0, table.columnAt(position.x())))
+        update_enabled()
+        menu = QMenu(table)
+        menu.addAction(edit)
+        menu.exec(table.viewport().mapToGlobal(position))
+
+    edit.triggered.connect(open_editor)
+    table.currentCellChanged.connect(update_enabled)
+    update_enabled()
+    table.customContextMenuRequested.connect(show_menu)
 
 
 def size_initial_columns(table):
@@ -239,6 +284,10 @@ class AuditDialog(QDialog):
                 if isinstance(value, str):
                     item.setToolTip(cell_tooltip(value))
                 self.table.setItem(row, column, item)
+        enable_edit_book_menu(
+            self.table, gui, db,
+            lambda row: (self.table.item(row, 1).data(Qt.ItemDataRole.DisplayRole),
+                         self.table.item(row, 4).text()))
         enable_header_context_menu(self.table)
         size_initial_columns(self.table)
         minimum_height = self.table.verticalHeader().defaultSectionSize()
@@ -405,6 +454,9 @@ class Editor(QDialog):
             except Exception as err:
                 self.add_row(book_id, None, None, {}, {}, f'ERROR: {err}', 0)
         progress.setValue(len(ids))
+        enable_edit_book_menu(
+            self.table, gui, self.db,
+            lambda row: (self.table.item(row, 0).data(Qt.ItemDataRole.UserRole), 'EPUB'))
         enable_header_context_menu(self.table)
         size_initial_columns(self.table)
         self.table.horizontalHeader().setSortIndicator(-1, Qt.SortOrder.AscendingOrder)
